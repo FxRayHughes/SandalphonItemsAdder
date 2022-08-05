@@ -23,7 +23,7 @@ taboolib {
     install("module-kether", "expansion-command-helper", "expansion-player-database")
     install("platform-bukkit")
     classifier = null
-    version = "6.0.7-17"
+    version = "6.0.9-31"
 }
 
 repositories {
@@ -33,11 +33,11 @@ repositories {
 
 dependencies {
     compileOnly("public:MythicMobs:1.0.1")
-    compileOnly("ink.ptms:Zaphkiel:1.7.2")
     compileOnly("ink.ptms:Adyeshach:1.4.1")
-    compileOnly("ink.ptms.core:v11701:11701-minimize:universal")
-    compileOnly("ink.ptms.core:v11600:11600-minimize")
     compileOnly("ink.ptms:nms-all:1.0.0")
+    compileOnly("ink.ptms.core:v11800:11800-minimize:api")
+    compileOnly("ink.ptms.core:v11802:11802:mapped")
+    compileOnly("ink.ptms.core:v11802:11802:universal")
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("libs"))
 }

@@ -2,7 +2,7 @@ package ink.ptms.sandalphon.module.impl.blockmine.data
 
 import ink.ptms.sandalphon.module.impl.blockmine.BlockMine
 import ink.ptms.sandalphon.util.Utils
-import ink.ptms.zaphkiel.ZaphkielAPI
+import ink.ptms.sandalphon.util.ifAir
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.entity.Player
@@ -23,7 +23,9 @@ fun BlockData.openEdit(player: Player) {
         rows(3)
         set(12, XMaterial.STRUCTURE_VOID) {
             name = "§f阶段 (${progress.size})"
-            val list = progress.mapIndexed { index, progress -> "§7第 ${index + 1} 阶段包含 ${progress.structures.size} 个结构" }.toMutableList()
+            val list =
+                progress.mapIndexed { index, progress -> "§7第 ${index + 1} 阶段包含 ${progress.structures.size} 个结构" }
+                    .toMutableList()
             list += ""
             list += "§8点击编辑"
             lore += list
@@ -56,7 +58,11 @@ fun BlockData.openEdit(player: Player) {
     }
 }
 
-fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = null, openStructure: BlockStructure? = null) {
+fun BlockData.openEditProgress(
+    player: Player,
+    openProgress: BlockProgress? = null,
+    openStructure: BlockStructure? = null
+) {
     when {
         openProgress == null -> {
             player.openMenu<Basic>("编辑开采结构 $id") {
@@ -65,7 +71,15 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                     progress.forEachIndexed { index, progress ->
                         inv.addItem(buildItem(XMaterial.PAPER) {
                             name = "§f阶段 (${index})"
-                            lore += arrayOf("§7包含 ${progress.structures.size} 个结构", "", "§8左键编辑", "§8右键捕获", "§c丢弃删除")
+                            lore.addAll(
+                                arrayOf(
+                                    "§7包含 ${progress.structures.size} 个结构",
+                                    "",
+                                    "§8左键编辑",
+                                    "§8右键捕获",
+                                    "§c丢弃删除"
+                                )
+                            )
                         })
                     }
                     inv.addItem(buildItem(XMaterial.MAP) {
@@ -83,14 +97,16 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                             it.clickEvent().isLeftClick -> {
                                 openEditProgress(player, progress[it.rawSlot])
                             }
+
                             it.clickEvent().isRightClick -> {
                                 player.sendMessage("§c[Sandalphon] §7使用§f捕获魔杖§7左键选取起点, 右键选取终点, 丢弃完成捕获.")
                                 player.giveItem(buildItem(XMaterial.BLAZE_ROD) {
                                     name = "§f§f§f捕获魔杖"
-                                    lore += arrayOf("§7BlockMine", "§7${id} ${it.rawSlot}")
+                                    lore.addAll(arrayOf("§7BlockMine", "§7${id} ${it.rawSlot}"))
                                 })
                                 player.closeInventory()
                             }
+
                             it.clickEvent().click == org.bukkit.event.inventory.ClickType.DROP -> {
                                 progress.removeAt(it.rawSlot)
                                 openEditProgress(player)
@@ -109,6 +125,7 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                 }
             }
         }
+
         openStructure == null -> {
             val structureMap = HashMap<Material, BlockStructure>()
             player.openMenu<Basic>("编辑开采结构 $id") {
@@ -118,6 +135,9 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                     structureMap.forEach { (k, v) ->
                         inv.addItem(buildItem(XMaterial.matchXMaterial(k)) {
                             lore += "§7替换: ${ItemStack(v.replace).getI18nName(player)}"
+                            if (v.itemsadder != null) {
+                                lore += "§7ItemsAdder: ${v.itemsadder}"
+                            }
                             lore += "§7工具: ${v.tool ?: "无"}"
                             lore += "§7掉落: ${v.drop.size} 项"
                             lore += arrayOf("", "§8点击编辑")
@@ -130,6 +150,7 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                             openEditProgress(player)
                             it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
                         }
+
                         it.rawSlot in 0..26 && it.currentItem.isNotAir() -> {
                             val structure = structureMap[it.currentItem!!.type]
                             if (structure != null) {
@@ -141,6 +162,7 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                 }
             }
         }
+
         else -> {
             player.openMenu<Basic>("编辑开采结构 $id") {
                 rows(3)
@@ -162,24 +184,29 @@ fun BlockData.openEditProgress(player: Player, openProgress: BlockProgress? = nu
                             openEditProgress(player, openProgress)
                             it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
                         }
+
                         11 -> {
-                            openProgress.structures.filter { structure -> structure.origin == openStructure.origin }.forEach { structure ->
-                                structure.replace = player.inventory.itemInMainHand.type
-                            }
+                            openProgress.structures.filter { structure -> structure.origin == openStructure.origin }
+                                .forEach { structure ->
+                                    structure.replace = player.inventory.itemInMainHand.type
+                                }
                             it.inventory.setItem(11, buildItem(XMaterial.GLASS) {
                                 name = "§f替换"
                                 lore += "§7${ItemStack(openStructure.replace).getI18nName(player)}"
                             })
                             it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
                         }
+
                         13 -> {
                             player.inputSign(arrayOf(openStructure.tool ?: "")) { sign ->
-                                openProgress.structures.filter { structure -> structure.origin == openStructure.origin }.forEach {
-                                    it.tool = sign[0]
-                                }
+                                openProgress.structures.filter { structure -> structure.origin == openStructure.origin }
+                                    .forEach {
+                                        it.tool = sign[0]
+                                    }
                                 openEditProgress(player, openProgress, openStructure)
                             }
                         }
+
                         15 -> {
                             openEditDrop(player, openProgress, openStructure)
                             it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
@@ -199,7 +226,7 @@ fun BlockData.openEditDrop(player: Player, openProgress: BlockProgress, openStru
         rows(3)
         onBuild { _, inv ->
             openStructure.drop.forEachIndexed { index, drop ->
-                val item = ZaphkielAPI.getItemStack(drop.item, player) ?: return@forEachIndexed
+                val item = Utils.getItem(player, drop.item).ifAir() ?: return@forEachIndexed
                 inv.setItem(index, buildItem(XMaterial.matchXMaterial(item.type)) {
                     name = "§f${drop.item}"
                     lore += arrayOf("§7${drop.chance * 100}%", "", "§7左键编辑", "§c丢弃删除")
@@ -216,25 +243,30 @@ fun BlockData.openEditDrop(player: Player, openProgress: BlockProgress, openStru
                     openEditProgress(player, openProgress, openStructure)
                     it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
                 }
+
                 it.rawSlot >= 0 && it.rawSlot < openStructure.drop.size -> {
                     when {
                         it.clickEvent().isLeftClick -> {
                             player.inputSign(arrayOf("${openStructure.drop[it.rawSlot].chance}")) { sign ->
-                                openProgress.structures.filter { structure -> structure.origin == openStructure.origin }.forEach { structure ->
-                                    structure.drop[it.rawSlot].chance = NumberConversions.toDouble(sign[0])
-                                }
+                                openProgress.structures.filter { structure -> structure.origin == openStructure.origin }
+                                    .forEach { structure ->
+                                        structure.drop[it.rawSlot].chance = NumberConversions.toDouble(sign[0])
+                                    }
                                 openEditDrop(player, openProgress, openStructure)
                             }
                         }
+
                         it.clickEvent().isRightClick -> {
-                            openProgress.structures.filter { structure -> structure.origin == openStructure.origin }.forEach { structure ->
-                                structure.drop.removeAt(it.rawSlot)
-                            }
+                            openProgress.structures.filter { structure -> structure.origin == openStructure.origin }
+                                .forEach { structure ->
+                                    structure.drop.removeAt(it.rawSlot)
+                                }
                             openEditDrop(player, openProgress, openStructure)
                         }
                     }
                     it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
                 }
+
                 it.rawSlot == openStructure.drop.size -> {
                     player.openMenu<Basic>("编辑开采结构 $id") {
                         rows(3)

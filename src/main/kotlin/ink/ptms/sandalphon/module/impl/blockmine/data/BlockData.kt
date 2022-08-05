@@ -61,7 +61,9 @@ class BlockData(@Expose val id: String) {
                 type = it.origin
                 this
             }
-            if (isAfter11300) {
+            if (it.itemsadder != null) {
+                it.spawn(block.location)
+            } else if (isAfter11300) {
                 val blockData = block.blockData
                 if (blockData is Directional) {
                     block.blockData = blockData.run {
@@ -73,7 +75,15 @@ class BlockData(@Expose val id: String) {
                 NMS.INSTANCE.setBlockData(block, fromBlockFace(it.direction).toByte())
             }
             submit(async = true) {
-                block.world.spawnParticle(Particle.EXPLOSION_NORMAL, block.location.add(0.5, 0.5, 0.5), 5, 0.5, 0.5, 0.5, 0.0)
+                block.world.spawnParticle(
+                    Particle.EXPLOSION_NORMAL,
+                    block.location.add(0.5, 0.5, 0.5),
+                    5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.0
+                )
             }
         }
     }

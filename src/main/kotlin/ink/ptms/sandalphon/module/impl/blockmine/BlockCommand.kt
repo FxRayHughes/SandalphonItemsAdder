@@ -33,8 +33,8 @@ object BlockCommand : Helper {
         dynamic(commit = "id") {
             suggestion<Player>(uncheck = true) { _, _ -> BlockMine.blocks.map { it.id } }
             execute<Player> { sender, _, argument ->
-                if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                    sender.error("该功能依赖 Zaphkiel 插件.")
+                if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                    sender.error("该功能依赖 SX-Item 插件.")
                     return@execute
                 }
                 val blockData = BlockMine.getBlock(argument)
@@ -54,8 +54,8 @@ object BlockCommand : Helper {
         dynamic(commit = "id") {
             suggestion<Player> { _, _ -> BlockMine.blocks.map { it.id } }
             execute<Player> { sender, _, argument ->
-                if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                    sender.error("该功能依赖 Zaphkiel 插件.")
+                if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                    sender.error("该功能依赖 SX-Item 插件.")
                     return@execute
                 }
                 val blockData = BlockMine.getBlock(argument)
@@ -76,8 +76,8 @@ object BlockCommand : Helper {
         dynamic(commit = "id") {
             suggestion<Player> { _, _ -> BlockMine.blocks.map { it.id } }
             execute<Player> { sender, _, argument ->
-                if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                    sender.error("该功能依赖 Zaphkiel 插件.")
+                if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                    sender.error("该功能依赖 SX-Item 插件.")
                     return@execute
                 }
                 val blockData = BlockMine.getBlock(argument)
@@ -96,8 +96,8 @@ object BlockCommand : Helper {
         dynamic(commit = "id") {
             suggestion<Player> { _, _ -> BlockMine.blocks.map { it.id } }
             execute<Player> { sender, _, argument ->
-                if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                    sender.error("该功能依赖 Zaphkiel 插件.")
+                if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                    sender.error("该功能依赖 SX-Item 插件.")
                     return@execute
                 }
                 val blockData = BlockMine.getBlock(argument)
@@ -116,13 +116,14 @@ object BlockCommand : Helper {
         }
     }
 
+
     @CommandBody
     val debug = subCommand {
         dynamic(commit = "id") {
             suggestion<Player> { _, _ -> BlockMine.blocks.map { it.id } }
             execute<Player> { sender, _, argument ->
-                if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                    sender.error("该功能依赖 Zaphkiel 插件.")
+                if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                    sender.error("该功能依赖 SX-Item 插件.")
                     return@execute
                 }
                 val blockData = BlockMine.getBlock(argument)

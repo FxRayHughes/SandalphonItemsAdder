@@ -36,8 +36,8 @@ object TreasureChestCommand : Helper {
                 sender.error("该功能依赖 Adyeshach 插件.")
                 return@execute
             }
-            if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                sender.error("该功能依赖 Zaphkiel 插件.")
+            if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                sender.error("该功能依赖 SX-Item 插件.")
                 return@execute
             }
             val block = sender.getTargetBlockExact()
@@ -64,8 +64,8 @@ object TreasureChestCommand : Helper {
                 sender.error("该功能依赖 Adyeshach 插件.")
                 return@execute
             }
-            if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                sender.error("该功能依赖 Zaphkiel 插件.")
+            if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                sender.error("该功能依赖 SX-Item 插件.")
                 return@execute
             }
             val block = sender.getTargetBlockExact()
@@ -94,8 +94,8 @@ object TreasureChestCommand : Helper {
                 sender.error("该功能依赖 Adyeshach 插件.")
                 return@execute
             }
-            if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                sender.error("该功能依赖 Zaphkiel 插件.")
+            if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                sender.error("该功能依赖 SX-Item 插件.")
                 return@execute
             }
             val block = sender.getTargetBlockExact()
@@ -121,8 +121,8 @@ object TreasureChestCommand : Helper {
                 sender.error("该功能依赖 Adyeshach 插件.")
                 return@execute
             }
-            if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
-                sender.error("该功能依赖 Zaphkiel 插件.")
+            if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
+                sender.error("该功能依赖 SX-Item 插件.")
                 return@execute
             }
             val block = sender.getTargetBlockExact()

@@ -1,7 +1,6 @@
 package ink.ptms.sandalphon.module.impl.holographic
 
 import ink.ptms.sandalphon.module.Helper
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.event.player.PlayerEditBookEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
@@ -26,6 +25,14 @@ object HologramEvents : Helper {
         Hologram.holograms.forEach { it.cancel(e.player) }
     }
 
+    fun <T> Collection<Collection<T>>.devanning(): Collection<T> {
+        val list = mutableListOf<T>()
+        this@devanning.asSequence().forEach { a ->
+            a.forEach { list.add(it) }
+        }
+        return list
+    }
+
     @SubscribeEvent
     fun e(e: PlayerEditBookEvent) {
         if (!e.player.isOp) {
@@ -37,9 +44,9 @@ object HologramEvents : Helper {
                 e.player.error("该全息已失效. (${e.previousBookMeta.lore!![1].uncolored()})")
             } else {
                 hologramData.content.clear()
-                val lines = e.newBookMeta.pages.flatMap {
-                    TextComponent(it).toPlainText().replace("§0", "").split("\n")
-                }
+                val lines = e.newBookMeta.pages.map {
+                    it.replace("§0", "").split("\n")
+                }.devanning().toList()
                 if (lines[0].uncolored() != "clear") {
                     hologramData.content.addAll(lines)
                 }
@@ -56,9 +63,9 @@ object HologramEvents : Helper {
                 e.player.error("该全息已失效. (${e.previousBookMeta.lore!![1].uncolored()})")
             } else {
                 hologramData.condition.clear()
-                val lines = e.newBookMeta.pages.flatMap {
-                    TextComponent(it).toPlainText().replace("§0", "").split("\n")
-                }
+                val lines = e.newBookMeta.pages.map {
+                    it.replace("§0", "").split("\n")
+                }.devanning().toList()
                 if (lines[0].uncolored() != "clear") {
                     hologramData.content.addAll(lines)
                 }

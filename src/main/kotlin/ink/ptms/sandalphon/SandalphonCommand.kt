@@ -2,7 +2,6 @@ package ink.ptms.sandalphon
 
 import ink.ptms.sandalphon.module.impl.blockmine.BlockCommand
 import ink.ptms.sandalphon.module.impl.holographic.HologramCommand
-import ink.ptms.sandalphon.module.impl.recipes.RecipesCommand
 import ink.ptms.sandalphon.module.impl.scriptblock.ScriptBlockCommand
 import ink.ptms.sandalphon.module.impl.spawner.SpawnerCommand
 import ink.ptms.sandalphon.module.impl.treasurechest.TreasureChestCommand
@@ -24,9 +23,6 @@ object SandalphonCommand {
 
     @CommandBody
     val hologram = HologramCommand
-
-    @CommandBody
-    val recipe = RecipesCommand
 
     @CommandBody
     val scriptblock = ScriptBlockCommand

@@ -6,19 +6,21 @@ import ink.ptms.sandalphon.module.impl.treasurechest.data.ChestInventory
 import ink.ptms.sandalphon.module.impl.treasurechest.data.open
 import ink.ptms.sandalphon.module.impl.treasurechest.data.openEdit
 import ink.ptms.sandalphon.util.Utils
+import ink.ptms.sandalphon.util.ifAir
 import org.bukkit.Location
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerEditBookEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.inventory.EquipmentSlot
+import org.bukkit.inventory.MainHand
 import org.bukkit.inventory.meta.BookMeta
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.platform.function.callEvent
 import taboolib.common.platform.function.submit
-import taboolib.common.reflect.Reflex.Companion.getProperty
-import taboolib.common.reflect.Reflex.Companion.invokeMethod
-import taboolib.common.util.Vector
 import taboolib.common.util.random
 import taboolib.module.chat.uncolored
 import taboolib.module.nms.MinecraftVersion
@@ -31,47 +33,21 @@ import taboolib.platform.util.isNotAir
  * @since 2020-05-29 22:00
  */
 object TreasureChestEvents : Helper {
-
-    fun toPosition(any: Any): Vector {
-        val x = any.invokeMethod<Number>("getX")!!.toInt()
-        val y = any.invokeMethod<Number>("getY")!!.toInt()
-        val z = any.invokeMethod<Number>("getZ")!!.toInt()
-        return Vector(x, y, z)
-    }
-
     @SubscribeEvent
-    fun e(e: PacketReceiveEvent) {
-        if (e.packet.name == "PacketPlayInUseItem") {
-            val a = e.packet.read<Any>("a")!!
-            if (a.javaClass.simpleName == "BlockPosition") {
-                val pos = toPosition(a)
-                val loc = Location(e.player.world, pos.x, pos.y, pos.z)
-                val chest = TreasureChest.getChest(loc.block) ?: return
-                if (e.packet.read<Any>("c").toString() == "MAIN_HAND") {
-                    submit {
-                        if (e.player.isSneaking && e.player.isOp && e.player.inventory.itemInMainHand.type.isAir) {
-                            chest.openEdit(e.player)
-                        } else {
-                            chest.open(e.player)
-                        }
-                    }
-                }
-            } else {
-                val pos = toPosition(a.getProperty<Any>("c")!!)
-                val loc = Location(e.player.world, pos.x, pos.y, pos.z)
-                val chest = TreasureChest.getChest(loc.block) ?: return
-                if (e.packet.read<Any>("b").toString() == "MAIN_HAND") {
-                    submit {
-                        if (e.player.isSneaking && e.player.isOp && e.player.inventory.itemInMainHand.type.isAir) {
-                            chest.openEdit(e.player)
-                        } else {
-                            chest.open(e.player)
-                        }
-                    }
+    fun e(e: PlayerInteractEvent) {
+        val item = e.item.ifAir() ?: return
+        val loc = e.clickedBlock?.location ?: return
+        val chest = TreasureChest.getChest(loc.block) ?: return
+        if (e.hand == EquipmentSlot.HAND) {
+            submit {
+                if (e.player.isSneaking && e.player.isOp && e.player.inventory.itemInMainHand.type.isAir) {
+                    chest.openEdit(e.player)
+                } else {
+                    chest.open(e.player)
                 }
             }
-            e.isCancelled = true
         }
+        e.isCancelled = true
     }
 
     @SubscribeEvent(priority = EventPriority.MONITOR, ignoreCancelled = true)

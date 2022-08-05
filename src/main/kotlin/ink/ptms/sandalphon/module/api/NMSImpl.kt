@@ -1,10 +1,10 @@
 package ink.ptms.sandalphon.module.api
 
-import net.minecraft.server.v1_16_R3.BlockPosition
-import net.minecraft.server.v1_16_R3.Blocks
-import net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction
+import net.minecraft.core.BlockPosition
+import net.minecraft.network.protocol.game.PacketPlayOutBlockAction
+import net.minecraft.world.level.block.Blocks
 import org.bukkit.block.Block
-import org.bukkit.craftbukkit.v1_16_R1.block.CraftBlock
+import org.bukkit.craftbukkit.v1_18_R2.block.CraftBlock
 import org.bukkit.entity.Player
 import taboolib.module.nms.MinecraftVersion
 import taboolib.module.nms.sendPacket

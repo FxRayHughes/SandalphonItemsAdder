@@ -32,7 +32,7 @@ object TreasureChest {
 
     @Awake(LifeCycle.ACTIVE)
     fun import() {
-        if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
+        if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
             return
         }
         if (Bukkit.getPluginManager().getPlugin("Adyeshach") == null) {

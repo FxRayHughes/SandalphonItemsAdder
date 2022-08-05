@@ -1,13 +1,16 @@
 package ink.ptms.sandalphon.module.impl.blockmine
 
+import dev.lone.itemsadder.api.CustomBlock
+import dev.lone.itemsadder.api.CustomFurniture
+import dev.lone.itemsadder.api.Events.CustomBlockBreakEvent
 import ink.ptms.sandalphon.module.Helper
 import ink.ptms.sandalphon.module.impl.blockmine.data.BlockState
 import ink.ptms.sandalphon.module.impl.blockmine.data.BlockStructure
 import ink.ptms.sandalphon.module.impl.blockmine.data.openEdit
 import ink.ptms.sandalphon.util.Pair
-import ink.ptms.zaphkiel.ZaphkielAPI
-import ink.ptms.zaphkiel.taboolib.module.nms.ItemTagData
-import ink.ptms.zaphkiel.taboolib.module.nms.ItemTagType
+import ink.ptms.sandalphon.util.Utils
+import ink.ptms.sandalphon.util.getStringList
+import ink.ptms.sandalphon.util.ifAir
 import org.bukkit.Effect
 import org.bukkit.Location
 import org.bukkit.Material
@@ -40,28 +43,37 @@ object BlockEvents : Helper {
 
     val catcher = HashMap<String, Pair<Location?, Location?>>()
 
+    operator fun MutableCollection<String>.plusAssign(element: String) {
+        this.add(element)
+    }
+
+    operator fun MutableCollection<String>.plusAssign(element: Array<String>) {
+        this.addAll(element)
+    }
+
     @SubscribeEvent(priority = EventPriority.LOW, ignoreCancelled = true)
-    fun player(e: BlockBreakEvent) {
+    fun cbreak(e: CustomBlockBreakEvent) {
         val result = BlockMine.find(e.block.location)
         if (e.block.type == result?.blockStructure?.origin) {
             e.isCancelled = true
             // 检查破坏工具
             if (result.blockStructure.tool != null) {
-                val itemStream = ZaphkielAPI.read(e.player.inventory.itemInMainHand)
-                if (itemStream.isVanilla() || !itemStream.getZaphkielData().containsKey("blockmine")) {
+                val item = e.player.inventory.itemInMainHand.ifAir()
+                if (item == null || item.getStringList("lotus.blokmine").contains("null")) {
                     return
                 }
-                val blockmineTag = itemStream.getZaphkielData()["blockmine"]!!
-                val blockmine = if (blockmineTag.type == ItemTagType.LIST) {
-                    blockmineTag.asList()
-                } else {
-                    ItemTagList.of(blockmineTag.asString())
-                }
-                if (!blockmine.contains(ItemTagData(result.blockStructure.tool))) {
+                val blockmineTag = item.getStringList("lotus.blokmine")
+                if (!blockmineTag.contains(result.blockStructure.tool)) {
                     return
                 }
             }
-            val event = ink.ptms.sandalphon.module.impl.blockmine.event.BlockBreakEvent(e.player, result.blockData, result.blockState, result.blockStructure, e)
+            val event = ink.ptms.sandalphon.module.impl.blockmine.event.BlockBreakEvent(
+                e.player,
+                result.blockData,
+                result.blockState,
+                result.blockStructure,
+                itemsAdderEvent = e
+            )
             event.call()
             if (event.isCancelled) {
                 return
@@ -72,7 +84,50 @@ object BlockEvents : Helper {
             }
             result.blockState.update = true
             result.blockStructure.drop.filter { random(it.chance) }.forEach {
-                val itemStack = ZaphkielAPI.getItemStack(it.item, e.player) ?: return@forEach
+                val itemStack = Utils.getItem(e.player, it.item).ifAir() ?: return@forEach
+                itemStack.amount = it.amount
+                e.block.world.dropItem(e.block.location.add(0.5, 0.5, 0.5), itemStack).pickupDelay = 20
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOW, ignoreCancelled = true)
+    fun player(e: BlockBreakEvent) {
+        if (CustomBlock.byAlreadyPlaced(e.block) != null) {
+            return
+        }
+        val result = BlockMine.find(e.block.location)
+        if (e.block.type == result?.blockStructure?.origin) {
+            e.isCancelled = true
+            // 检查破坏工具
+            if (result.blockStructure.tool != null) {
+                val item = e.player.inventory.itemInMainHand.ifAir()
+                if (item == null || item.getStringList("lotus.blokmine").contains("null")) {
+                    return
+                }
+                val blockmineTag = item.getStringList("lotus.blokmine")
+                if (!blockmineTag.contains(result.blockStructure.tool)) {
+                    return
+                }
+            }
+            val event = ink.ptms.sandalphon.module.impl.blockmine.event.BlockBreakEvent(
+                e.player,
+                result.blockData,
+                result.blockState,
+                result.blockStructure,
+                e
+            )
+            event.call()
+            if (event.isCancelled) {
+                return
+            }
+            e.block.type = result.blockStructure.replace
+            e.block.world.players.filter { it != e.player }.forEach {
+                it.playEffect(e.block.location, Effect.STEP_SOUND, result.blockStructure.origin)
+            }
+            result.blockState.update = true
+            result.blockStructure.drop.filter { random(it.chance) }.forEach {
+                val itemStack = Utils.getItem(e.player, it.item).ifAir() ?: return@forEach
                 itemStack.amount = it.amount
                 e.block.world.dropItem(e.block.location.add(0.5, 0.5, 0.5), itemStack).pickupDelay = 20
             }
@@ -133,7 +188,7 @@ object BlockEvents : Helper {
                 }
                 val pair = catcher.computeIfAbsent(e.player.name) { Pair(null, null) }
                 pair.key = e.block.location
-                if (pair.key != null && pair.value != null) {
+                if (pair.value != null) {
                     build(e.player, pair.key!!, pair.value!!) { loc ->
                         e.player.spawnParticle(Particle.FLAME, loc.add(0.5, 0.5, 0.5), 5, 0.0, 0.0, 0.0, 0.0)
                     }
@@ -180,7 +235,8 @@ object BlockEvents : Helper {
                     return
                 }
                 blockData.clean(pair.first)
-                pair.first.current = if (pair.first.current + 1 == blockData.progress.size) 0 else pair.first.current + 1
+                pair.first.current =
+                    if (pair.first.current + 1 == blockData.progress.size) 0 else pair.first.current + 1
                 blockData.build(pair.first)
                 e.player.info("实例阶段已切换.")
             }
@@ -199,7 +255,7 @@ object BlockEvents : Helper {
                 }
                 val pair = catcher.computeIfAbsent(e.player.name) { Pair(null, null) }
                 pair.value = e.clickedBlock!!.location
-                if (pair.key != null && pair.value != null) {
+                if (pair.key != null) {
                     build(e.player, pair.key!!, pair.value!!) { loc ->
                         e.player.spawnParticle(Particle.FLAME, loc.add(0.5, 0.5, 0.5), 5, 0.0, 0.0, 0.0, 0.0)
                     }
@@ -244,7 +300,18 @@ object BlockEvents : Helper {
                         return@build
                     }
                     val direction = getBlockFace(block)
-                    val structure = BlockStructure(direction, block.type, Material.AIR, block.location.subtract(mid).toVector())
+                    val cblock = CustomBlock.byAlreadyPlaced(block)
+                    val structure = if (cblock == null) {
+                        BlockStructure(direction, block.type, Material.AIR, block.location.subtract(mid).toVector())
+                    } else {
+                        BlockStructure(
+                            direction,
+                            block.type,
+                            Material.AIR,
+                            block.location.subtract(mid).toVector(),
+                            cblock.namespacedID
+                        )
+                    }
                     blockProgress.structures.add(structure)
                 }
                 e.player.info("结构已储存.")
@@ -262,7 +329,12 @@ object BlockEvents : Helper {
         val minY = min(locA.y, locB.y)
         val maxZ = max(locA.z, locB.z)
         val minZ = min(locA.z, locB.z)
-        buildCube(Location(player.world, minX, minY, minZ), Location(player.world, maxX, maxY, maxZ), 1.0, filled) { loc ->
+        buildCube(
+            Location(player.world, minX, minY, minZ),
+            Location(player.world, maxX, maxY, maxZ),
+            1.0,
+            filled
+        ) { loc ->
             action.invoke(loc)
         }
     }

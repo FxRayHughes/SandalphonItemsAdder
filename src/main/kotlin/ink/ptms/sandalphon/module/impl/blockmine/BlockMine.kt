@@ -3,6 +3,7 @@ package ink.ptms.sandalphon.module.impl.blockmine
 import ink.ptms.sandalphon.module.impl.blockmine.data.BlockData
 import ink.ptms.sandalphon.module.impl.blockmine.data.BlockState
 import ink.ptms.sandalphon.module.impl.blockmine.data.BlockStructure
+import ink.ptms.sandalphon.module.impl.holographic.Hologram
 import ink.ptms.sandalphon.util.Utils
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -22,13 +23,17 @@ object BlockMine {
 
     @Schedule(period = 20, async = true)
     fun e() {
-        blocks.forEach { it.grow() }
+        blocks.forEach {
+            if (it.blocks.isNotEmpty()){
+                Utils.buildHologram(listOf(it.id), it.blocks.first().location.clone().add(0.5,1.0,0.5), 21)
+            }
+            it.grow()
+        }
     }
 
-    @Suppress("UNCHECKED_CAST")
     @Awake(LifeCycle.ACTIVE)
     fun import() {
-        if (Bukkit.getPluginManager().getPlugin("Zaphkiel") == null) {
+        if (Bukkit.getPluginManager().getPlugin("SX-Item") == null) {
             return
         }
         // 清空缓存文件
@@ -48,7 +53,10 @@ object BlockMine {
     fun export() {
         blocks.forEach { block ->
             // 写入文件
-            newFile(getDataFolder(), "module/blockmine/${block.id}.json").writeText(Utils.format(Utils.serializer.toJsonTree(block)), StandardCharsets.UTF_8)
+            newFile(
+                getDataFolder(),
+                "module/blockmine/${block.id}.json"
+            ).writeText(Utils.format(Utils.serializer.toJsonTree(block)), StandardCharsets.UTF_8)
         }
     }
 

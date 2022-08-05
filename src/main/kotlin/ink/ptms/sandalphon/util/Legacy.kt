@@ -39,13 +39,12 @@ class ItemBuilder(val material: XMaterial) {
     fun build(): ItemStack {
         return buildItem(material) {
             this.name = this@ItemBuilder.name
-            this.lore += this@ItemBuilder.lore
+            this.lore.addAll(this@ItemBuilder.lore)
+            this.lore.add("&cNoReplace")
             if (shiny) {
                 shiny()
             }
-            if (colored) {
-                colored()
-            }
+            colored()
         }
     }
 }

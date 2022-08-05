@@ -7,7 +7,8 @@ import ink.ptms.sandalphon.module.impl.treasurechest.event.ChestOpenEvent
 import ink.ptms.sandalphon.module.impl.treasurechest.isTreasureType
 import ink.ptms.sandalphon.util.ItemBuilder
 import ink.ptms.sandalphon.util.Utils
-import ink.ptms.zaphkiel.ZaphkielAPI
+import ink.ptms.sandalphon.util.getString
+import ink.ptms.sandalphon.util.ifAir
 import org.bukkit.Bukkit
 import org.bukkit.Sound
 import org.bukkit.entity.Player
@@ -46,19 +47,24 @@ fun ChestData.open(player: Player) {
         }
         if (locked != "null") {
             if (player.inventory.itemInMainHand.isAir()) {
-                AdyeshachAPI.createHolographic(player, block.clone().add(0.5, 1.0, 0.5), "&c&l:(", "&f需要钥匙才可以打开.")
+                AdyeshachAPI.createHolographic(
+                    player,
+                    block.clone().add(0.5, 1.0, 0.5),
+                    "&c&l:(",
+                    "&f需要钥匙才可以打开."
+                )
                 player.playSound(block, Sound.BLOCK_CHEST_LOCKED, 1f, random(1.5, 2.0).toFloat())
                 return@thenAccept
             }
-            val itemStream = ZaphkielAPI.read(player.inventory.itemInMainHand)
-            if (itemStream.isVanilla()) {
-                AdyeshachAPI.createHolographic(player, block.clone().add(0.5, 1.0, 0.5), "&c&l:(", "&f需要钥匙才可以打开.")
-                player.playSound(block, Sound.BLOCK_CHEST_LOCKED, 1f, random(1.5, 2.0).toFloat())
-                return@thenAccept
-            }
-            val compound = itemStream.getZaphkielData()["treasurechest"]
-            if (compound == null || (compound.asString() != locked && compound.asString() != "all")) {
-                AdyeshachAPI.createHolographic(player, block.clone().add(0.5, 1.0, 0.5), "&c&l:(", "&f需要钥匙才可以打开.")
+            val itemStream = player.inventory.itemInMainHand
+            val compound = itemStream.getString("lotus.treasurechest")
+            if (compound == "null" || (compound != locked && compound != "all")) {
+                AdyeshachAPI.createHolographic(
+                    player,
+                    block.clone().add(0.5, 1.0, 0.5),
+                    "&c&l:(",
+                    "&f需要钥匙才可以打开."
+                )
                 player.playSound(block, Sound.BLOCK_CHEST_LOCKED, 1f, random(1.5, 2.0).toFloat())
                 return@thenAccept
             }
@@ -66,13 +72,19 @@ fun ChestData.open(player: Player) {
         if (global) {
             if (globalTime > System.currentTimeMillis() || (update == -1L && globalTime > 0)) {
                 if (replace.isTreasureType()) {
-                    AdyeshachAPI.createHolographic(player, block.clone().add(0.5, 1.0, 0.5), "&c&l:(", "&f这个箱子什么都没有.")
+                    AdyeshachAPI.createHolographic(
+                        player,
+                        block.clone().add(0.5, 1.0, 0.5),
+                        "&c&l:(",
+                        "&f这个箱子什么都没有."
+                    )
                     player.playSound(block, Sound.BLOCK_CHEST_LOCKED, 1f, random(1.5, 2.0).toFloat())
                 }
                 return@thenAccept
             }
             if (globalInventory == null) {
-                globalInventory = update(player, Bukkit.createInventory(ChestInventory(this), if (link != null) 54 else 27, title))
+                globalInventory =
+                    update(player, Bukkit.createInventory(ChestInventory(this), if (link != null) 54 else 27, title))
             }
             if (locked != "null") {
                 player.inventory.itemInMainHand.amount -= 1
@@ -83,7 +95,12 @@ fun ChestData.open(player: Player) {
             val time = Coerce.toLong(data["Sandalphon.treasurechest.${Utils.fromLocation(block).replace(".", "__")}"])
             if (time > System.currentTimeMillis() || (update == -1L && time > 0)) {
                 if (replace.isTreasureType()) {
-                    AdyeshachAPI.createHolographic(player, block.clone().add(0.5, 1.0, 0.5), "&c&l:(", "&f这个箱子什么都没有.")
+                    AdyeshachAPI.createHolographic(
+                        player,
+                        block.clone().add(0.5, 1.0, 0.5),
+                        "&c&l:(",
+                        "&f这个箱子什么都没有."
+                    )
                     player.playSound(block, Sound.BLOCK_CHEST_LOCKED, 1f, random(1.5, 2.0).toFloat())
                 }
                 return@thenAccept
@@ -105,7 +122,8 @@ fun ChestData.open(player: Player) {
                         }
                     }
                     it.inventory.clear()
-                    data["treasurechest.${Utils.fromLocation(block).replace(".", "__")}"] = System.currentTimeMillis() + update
+                    data["treasurechest.${Utils.fromLocation(block).replace(".", "__")}"] =
+                        System.currentTimeMillis() + update
                     tick(player, true)
                     open.remove(player.name)
                     // 关闭箱子的特效
@@ -122,19 +140,34 @@ fun ChestData.open(player: Player) {
 
 fun ChestData.openEdit(player: Player) {
     fun toGlobal() = ItemBuilder(XMaterial.BEACON).name("§f应用全局").lore(if (global) "§a启用" else "§c禁用").build()
-    fun replaceBlock() = ItemBuilder(XMaterial.GLASS).name("§f替换方块").lore("§7${ItemStack(replace).getName(player)}").build()
+    fun replaceBlock() =
+        ItemBuilder(XMaterial.GLASS).name("§f替换方块").lore("§7${ItemStack(replace).getName(player)}").build()
     player.openMenu<Basic>("编辑宝藏 ${Utils.fromLocation(block)}") {
         rows(4)
         onBuild { _, inv ->
             inv.setItem(10, ItemBuilder(XMaterial.NAME_TAG).name("§f名称").lore("§7$title").build())
-            inv.setItem(11, ItemBuilder(XMaterial.TRIPWIRE_HOOK).name("§f钥匙").lore("§7${if (locked == "null") "无" else locked}").build())
-            inv.setItem(12, ItemBuilder(XMaterial.HOPPER_MINECART).name("§f随机数量").lore("§7${random.first} -> ${random.second}").build())
-            inv.setItem(13, ItemBuilder(XMaterial.CHEST_MINECART).name("§f刷新时间").lore("§7${getTimeDisplay(update)}").build())
+            inv.setItem(
+                11,
+                ItemBuilder(XMaterial.TRIPWIRE_HOOK).name("§f钥匙").lore("§7${if (locked == "null") "无" else locked}")
+                    .build()
+            )
+            inv.setItem(
+                12,
+                ItemBuilder(XMaterial.HOPPER_MINECART).name("§f随机数量").lore("§7${random.first} -> ${random.second}")
+                    .build()
+            )
+            inv.setItem(
+                13,
+                ItemBuilder(XMaterial.CHEST_MINECART).name("§f刷新时间").lore("§7${getTimeDisplay(update)}").build()
+            )
             inv.setItem(14, toGlobal())
             inv.setItem(15, replaceBlock())
             inv.setItem(16, ItemBuilder(XMaterial.OBSERVER).name("§f开启条件").lore(condition.map { "§7$it" }).build())
             inv.setItem(19, ItemBuilder(XMaterial.CHEST).name("§f编辑内容").build())
-            inv.setItem(20, ItemBuilder(XMaterial.WATER_BUCKET).name("§f重置冷却").lore(if (global) "§7全局" else "§c个人").build())
+            inv.setItem(
+                20,
+                ItemBuilder(XMaterial.WATER_BUCKET).name("§f重置冷却").lore(if (global) "§7全局" else "§c个人").build()
+            )
         }
         onClick(lock = true) {
             it.isCancelled = true
@@ -145,29 +178,34 @@ fun ChestData.openEdit(player: Player) {
                         openEdit(player)
                     }
                 }
+
                 11 -> {
                     player.inputSign(arrayOf(locked)) { sign ->
                         locked = sign[0]
                         openEdit(player)
                     }
                 }
+
                 12 -> {
                     player.inputSign(arrayOf(random.first.toString(), random.second.toString())) { sign ->
                         random = NumberConversions.toInt(sign[0]) to NumberConversions.toInt(sign[1])
                         openEdit(player)
                     }
                 }
+
                 13 -> {
                     player.inputSign(arrayOf(getTimeFormatted(update))) { sign ->
                         update = sign[0].parseMillis()
                         openEdit(player)
                     }
                 }
+
                 14 -> {
                     global = !global
                     it.currentItem = toGlobal()
                     it.clicker.playSound(it.clicker.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f)
                 }
+
                 15 -> {
                     if (player.inventory.itemInMainHand.type.isBlock) {
                         replace = player.inventory.itemInMainHand.type
@@ -177,6 +215,7 @@ fun ChestData.openEdit(player: Player) {
                         player.sendMessage("§c[Sandalphon] §7手持物品非方块.")
                     }
                 }
+
                 16 -> {
                     player.closeInventory()
                     player.giveItem(buildBook {
@@ -186,14 +225,18 @@ fun ChestData.openEdit(player: Player) {
                         lore += listOf("§7TreasureChest", "§7${Utils.fromLocation(block)}")
                     })
                 }
+
                 19 -> {
                     openEditContent(player)
                 }
+
                 20 -> {
                     if (global) {
                         globalTime = 0
                     } else {
-                        player.getDataContainer()["Sandalphon.treasurechest.${Utils.fromLocation(block).replace(".", "__")}"] = "0"
+                        player.getDataContainer()["Sandalphon.treasurechest.${
+                            Utils.fromLocation(block).replace(".", "__")
+                        }"] = "0"
                     }
                 }
             }
@@ -209,7 +252,7 @@ fun ChestData.openEditContent(player: Player) {
         rows(if (link != null) 6 else 3)
         onBuild { _, inv ->
             this@openEditContent.items.forEachIndexed { i, p ->
-                val itemStack = ZaphkielAPI.getItemStack(p.first, player) ?: return@forEachIndexed
+                val itemStack = Utils.getItem(player, p.first).ifAir() ?: return@forEachIndexed
                 inv.setItem(i, itemStack.run {
                     this.amount = p.second
                     this
